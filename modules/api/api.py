@@ -33,6 +33,8 @@ import piexif.helper
 from contextlib import closing
 from modules.progress import create_task_id, add_task_to_queue, start_task, finish_task, current_task
 
+from webui import translation_tokenizer, translation_model
+
 def script_name_to_index(name, scripts):
     try:
         return [script.title().lower() for script in scripts].index(name.lower())
@@ -431,6 +433,19 @@ class Api:
 
     def text2imgapi(self, txt2imgreq: models.StableDiffusionTxt2ImgProcessingAPI):
         task_id = txt2imgreq.force_task_id or create_task_id("txt2img")
+        
+        vi_prompt = txt2imgreq.prompt[67:]
+        print({ vi_prompt })
+
+        print("Translating prompt from Vietnamese to English...")
+        inputs = [vi_prompt]
+        encoded_inputs = translation_tokenizer(inputs, return_tensors="pt", padding=True, truncation=True).to("cuda")
+        outputs = translation_model.generate(encoded_inputs.input_ids, max_length=64)
+        en_prompt = translation_tokenizer.decode(outputs[0], skip_special_tokens=True)
+        print(f"Translated prompt: {en_prompt}")
+
+        txt2imgreq.prompt = txt2imgreq.prompt[:67] + en_prompt.lower()
+        print(txt2imgreq.prompt)
 
         script_runner = scripts.scripts_txt2img
 

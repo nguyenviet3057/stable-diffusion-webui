@@ -7,6 +7,17 @@ from modules import timer
 from modules import initialize_util
 from modules import initialize
 
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+# Tải mô hình dịch sẵn và giữ trong VRAM
+print("Loading translation model...")
+# translation_model_name = "VietAI/envit5-translation"
+# translation_model_name = "vinai/vinai-translate-vi2en-v2"
+translation_model_name = "Helsinki-NLP/opus-mt-vi-en"
+translation_tokenizer = AutoTokenizer.from_pretrained(translation_model_name, cache_dir="./cache")
+translation_model = AutoModelForSeq2SeqLM.from_pretrained(translation_model_name, cache_dir="./cache").to("cuda")
+print("Translation model loaded.")
+
 startup_timer = timer.startup_timer
 startup_timer.record("launcher")
 
